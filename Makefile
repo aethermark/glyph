@@ -1,0 +1,66 @@
+.PHONY: debug release run test format lint clean rebuild coverage
+
+BUILD_DIR := build
+DEBUG_DIR := $(BUILD_DIR)/debug
+RELEASE_DIR := $(BUILD_DIR)/release
+
+debug:
+	cmake -B $(DEBUG_DIR) \
+		-DCMAKE_BUILD_TYPE=Debug \
+		-DBUILD_TESTING=ON
+	ln -sf $(DEBUG_DIR)/compile_commands.json compile_commands.json
+	cmake --build $(DEBUG_DIR)
+
+release:
+	cmake -B $(RELEASE_DIR) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_TESTING=OFF
+	cmake --build $(RELEASE_DIR)
+
+run:
+	./$(DEBUG_DIR)/examples/playground/playground
+
+test:
+	ctest --test-dir $(DEBUG_DIR) --output-on-failure
+
+format:
+	@echo "Running clang-format..."
+	@find src include examples tests \
+		-type f \( -name "*.cpp" -o -name "*.hpp" \) \
+		-exec sh -c 'printf "  %-50s\n" "$$1"; clang-format -i "$$1"' _ {} \;
+	@echo "Done."
+
+lint: debug
+	find src include \
+		-type f \( -name "*.cpp" -o -name "*.hpp" \) \
+		-print0 | \
+	xargs -0 clang-tidy -p $(DEBUG_DIR)
+
+coverage:
+	cmake -B $(DEBUG_DIR) \
+		-DCMAKE_BUILD_TYPE=Debug \
+		-DBUILD_TESTING=ON \
+		-DGLYPH_ENABLE_COVERAGE=ON \
+		-DGLYPH_BUILD_PLAYGROUND=OFF
+
+	cmake --build $(DEBUG_DIR)
+
+	ctest --test-dir $(DEBUG_DIR) --output-on-failure
+
+	gcovr \
+		--root . \
+		--object-directory $(DEBUG_DIR) \
+		--filter "src" \
+		--filter "include" \
+		--exclude "tests" \
+		--exclude ".*/_deps/.*" \
+		--html-details coverage.html \
+		--print-summary
+
+rebuild: clean debug
+
+clean:
+	rm -rf $(BUILD_DIR)
+	rm -f compile_commands.json
+	rm -f coverage.*
+

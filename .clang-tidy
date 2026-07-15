@@ -1,0 +1,19 @@
+Checks: >
+  bugprone-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  portability-*,
+  cppcoreguidelines-*,
+
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -readability-magic-numbers,
+  -portability-avoid-pragma-once
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: '^.*/(include|src)/'
+
+FormatStyle: file
