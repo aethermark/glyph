@@ -4,6 +4,9 @@ BUILD_DIR := build
 DEBUG_DIR := $(BUILD_DIR)/debug
 RELEASE_DIR := $(BUILD_DIR)/release
 
+IWYU_TOOL := $(shell command -v iwyu_tool.py)
+FIX_INCLUDES := $(shell command -v fix_includes.py)
+
 debug:
 	cmake -B $(DEBUG_DIR) \
 		-DCMAKE_BUILD_TYPE=Debug \
@@ -35,6 +38,16 @@ lint: debug
 		-type f \( -name "*.cpp" -o -name "*.hpp" \) \
 		-print0 | \
 	xargs -0 clang-tidy -p $(DEBUG_DIR)
+
+	python3 $(IWYU_TOOL) \
+		-p $(DEBUG_DIR) \
+		src \
+	| $(FIX_INCLUDES) --nosafe_headers
+
+	find src include \
+		-type f \( -name "*.cpp" -o -name "*.hpp" \) \
+		-print0 | \
+	xargs -0 clang-format -i
 
 coverage:
 	cmake -B $(DEBUG_DIR) \

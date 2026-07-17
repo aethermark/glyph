@@ -19,6 +19,11 @@ target_sources(glyph-tests
         ${GLYPH_TEST_SOURCES}
 )
 
+target_include_directories(glyph-tests
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/src
+)
+
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 include(EnableCoverage)

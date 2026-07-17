@@ -33,7 +33,7 @@ file(GLOB_RECURSE GLYPH_SOURCES CONFIGURE_DEPENDS
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
 )
 
-target_sources(glyph 
+target_sources(glyph
     PRIVATE
       ${GLYPH_SOURCES}
 )
@@ -42,6 +42,8 @@ target_include_directories(glyph
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/src
 )
 
 target_compile_features(glyph
