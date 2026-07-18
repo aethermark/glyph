@@ -43,10 +43,10 @@ lint: debug
 
 	@python3 $(IWYU_TOOL) \
 		-p $(DEBUG_DIR) \
-		src \
+		src tests \
 	| $(FIX_INCLUDES) --nosafe_headers
 
-	@find src include \
+	@find src include tests \
 		-type f \( -name "*.cpp" -o -name "*.hpp" \) \
 		-print0 | \
 	xargs -0 clang-format -i
