@@ -8,23 +8,25 @@ IWYU_TOOL := $(shell command -v iwyu_tool.py)
 FIX_INCLUDES := $(shell command -v fix_includes.py)
 
 debug:
-	cmake -B $(DEBUG_DIR) \
+	@cmake -B $(DEBUG_DIR) \
 		-DCMAKE_BUILD_TYPE=Debug \
-		-DBUILD_TESTING=ON
-	ln -sf $(DEBUG_DIR)/compile_commands.json compile_commands.json
-	cmake --build $(DEBUG_DIR)
+		-DBUILD_TESTING=ON \
+    --log-level=WARNING
+	@ln -sf $(DEBUG_DIR)/compile_commands.json compile_commands.json
+	@cmake --build $(DEBUG_DIR) -- --no-print-directory
 
 release:
-	cmake -B $(RELEASE_DIR) \
+	@cmake -B $(RELEASE_DIR) \
 		-DCMAKE_BUILD_TYPE=Release \
-		-DBUILD_TESTING=OFF
-	cmake --build $(RELEASE_DIR)
+		-DBUILD_TESTING=OFF \
+    --log-level=WARNING
+	@cmake --build $(RELEASE_DIR) -- --no-print-directory
 
 run:
-	./$(DEBUG_DIR)/examples/playground/playground
+	@./$(DEBUG_DIR)/examples/playground/playground
 
 test:
-	ctest --test-dir $(DEBUG_DIR) --output-on-failure
+	@$(DEBUG_DIR)/tests/glyph-tests
 
 format:
 	@echo "Running clang-format..."
@@ -34,33 +36,33 @@ format:
 	@echo "Done."
 
 lint: debug
-	find src include \
+	@find src include \
 		-type f \( -name "*.cpp" -o -name "*.hpp" \) \
 		-print0 | \
 	xargs -0 clang-tidy -p $(DEBUG_DIR)
 
-	python3 $(IWYU_TOOL) \
+	@python3 $(IWYU_TOOL) \
 		-p $(DEBUG_DIR) \
 		src \
 	| $(FIX_INCLUDES) --nosafe_headers
 
-	find src include \
+	@find src include \
 		-type f \( -name "*.cpp" -o -name "*.hpp" \) \
 		-print0 | \
 	xargs -0 clang-format -i
 
 coverage:
-	cmake -B $(DEBUG_DIR) \
+	@cmake -B $(DEBUG_DIR) \
 		-DCMAKE_BUILD_TYPE=Debug \
 		-DBUILD_TESTING=ON \
 		-DGLYPH_ENABLE_COVERAGE=ON \
 		-DGLYPH_BUILD_PLAYGROUND=OFF
 
-	cmake --build $(DEBUG_DIR)
+	@cmake --build $(DEBUG_DIR) -- --no-print-directory
 
-	ctest --test-dir $(DEBUG_DIR) --output-on-failure
+	@$(DEBUG_DIR)/tests/glyph-tests
 
-	gcovr \
+	@gcovr \
 		--root . \
 		--object-directory $(DEBUG_DIR) \
 		--filter "src" \
@@ -73,7 +75,7 @@ coverage:
 rebuild: clean debug
 
 clean:
-	rm -rf $(BUILD_DIR)
-	rm -f compile_commands.json
-	rm -f coverage.*
+	@rm -rf $(BUILD_DIR)
+	@rm -f compile_commands.json
+	@rm -f coverage.*
 
