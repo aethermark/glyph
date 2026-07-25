@@ -1,5 +1,7 @@
 #include "parser/binary_reader.hpp"
 
+#include <cstdint>
+#include <filesystem>
 #include <fstream>
 
 auto glyph::BinaryReader::LoadData(const std::filesystem::path& path) -> bool {
@@ -9,19 +11,75 @@ auto glyph::BinaryReader::LoadData(const std::filesystem::path& path) -> bool {
     return false;
   }
 
-  const auto size = std::filesystem::file_size(path);
+  size_ = std::filesystem::file_size(path);
 
-  data_.resize(size);
+  data_.resize(size_);
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  file.read(reinterpret_cast<char*>(data_.data()), static_cast<std::streamsize>(size));
+  file.read(reinterpret_cast<char*>(data_.data()), static_cast<std::streamsize>(size_));
 
-  if (file.gcount() != static_cast<std::streamsize>(size)) {
+  if (file.gcount() != static_cast<std::streamsize>(size_)) {
     data_.clear();
     return false;
   }
 
   return true;
+}
+
+auto glyph::BinaryReader::ReadUInt8() -> uint8_t {
+  return data_.at(position_++);
+}
+
+auto glyph::BinaryReader::ReadUInt16() -> uint16_t {
+  uint16_t data = static_cast<uint16_t>(data_.at(position_++)) << kSHIFT_BYTE;
+  data |= static_cast<uint16_t>(data_.at(position_++));
+  return data;
+}
+
+auto glyph::BinaryReader::ReadUInt32() -> uint32_t {
+  uint32_t data = static_cast<uint32_t>(data_.at(position_++)) << 3 * kSHIFT_BYTE;
+  data |= static_cast<uint32_t>(data_.at(position_++)) << 2 * kSHIFT_BYTE;
+  data |= static_cast<uint32_t>(data_.at(position_++)) << kSHIFT_BYTE;
+  data |= static_cast<uint32_t>(data_.at(position_++));
+  return data;
+}
+
+auto glyph::BinaryReader::ReadInt16() -> int16_t {
+  uint16_t data = static_cast<uint16_t>(data_.at(position_++)) << kSHIFT_BYTE;
+  data |= static_cast<uint16_t>(data_.at(position_++));
+  return static_cast<int16_t>(data);
+}
+
+auto glyph::BinaryReader::ReadInt32() -> int32_t {
+  uint32_t data = static_cast<uint32_t>(data_.at(position_++)) << 3 * kSHIFT_BYTE;
+  data |= static_cast<uint32_t>(data_.at(position_++)) << 2 * kSHIFT_BYTE;
+  data |= static_cast<uint32_t>(data_.at(position_++)) << kSHIFT_BYTE;
+  data |= static_cast<uint32_t>(data_.at(position_++));
+  return static_cast<int32_t>(data);
+}
+
+auto glyph::BinaryReader::ReadFWord() -> int16_t {
+  return ReadInt16();
+}
+
+auto glyph::BinaryReader::ReadUFWord() -> uint16_t {
+  return ReadUInt16();
+}
+
+auto glyph::BinaryReader::ReadOffset16() -> uint16_t {
+  return ReadUInt16();
+}
+
+auto glyph::BinaryReader::ReadOffset32() -> uint32_t {
+  return ReadUInt32();
+}
+
+auto glyph::BinaryReader::ReadF2Dot14() -> int16_t {
+  return ReadInt16();
+}
+
+auto glyph::BinaryReader::ReadFixed() -> int32_t {
+  return ReadInt32();
 }
 
 auto glyph::BinaryReader::GetData() const -> const std::vector<uint8_t>& {
