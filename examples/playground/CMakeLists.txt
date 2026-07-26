@@ -3,6 +3,12 @@ add_executable(playground
 )
 
 target_link_libraries(playground
-	PRIVATE 
+	PRIVATE
 	  glyph::glyph
 )
+
+target_include_directories(playground
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/src
+)
+

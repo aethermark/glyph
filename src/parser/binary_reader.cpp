@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include "parser/tables.hpp"
+
 auto glyph::BinaryReader::LoadData(const std::filesystem::path& path) -> bool {
   std::ifstream file(path, std::ios::binary);
 
@@ -74,12 +76,45 @@ auto glyph::BinaryReader::ReadOffset32() -> uint32_t {
   return ReadUInt32();
 }
 
-auto glyph::BinaryReader::ReadF2Dot14() -> int16_t {
-  return ReadInt16();
+auto glyph::BinaryReader::ReadF2Dot14() -> float {
+  constexpr float scale = 16384.0F;  // 2^14
+  return static_cast<float>(ReadInt16()) / scale;
 }
 
-auto glyph::BinaryReader::ReadFixed() -> int32_t {
-  return ReadInt32();
+auto glyph::BinaryReader::ReadFixed() -> float {
+  constexpr float scale = 65536.0F;  // 2^16
+  return static_cast<float>(ReadInt32()) / scale;
+}
+
+auto glyph::BinaryReader::ReadTag() -> std::string {
+  std::string tag;
+  tag.reserve(4);
+
+  tag.push_back(static_cast<char>(ReadUInt8()));
+  tag.push_back(static_cast<char>(ReadUInt8()));
+  tag.push_back(static_cast<char>(ReadUInt8()));
+  tag.push_back(static_cast<char>(ReadUInt8()));
+
+  return tag;
+}
+
+auto glyph::BinaryReader::ReadTableDirectory() -> TableDirectory {
+  return {
+      .sfnt_version = ReadUInt32(),
+      .num_tables = ReadUInt16(),
+      .search_range = ReadUInt16(),
+      .entry_selector = ReadUInt16(),
+      .range_shift = ReadUInt16(),
+  };
+}
+
+auto glyph::BinaryReader::ReadTableRecord() -> TableRecord {
+  return {
+      .tag = ReadTag(),
+      .checksum = ReadUInt32(),
+      .offset = ReadOffset32(),
+      .length = ReadUInt32(),
+  };
 }
 
 auto glyph::BinaryReader::GetData() const -> const std::vector<uint8_t>& {

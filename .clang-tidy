@@ -8,7 +8,12 @@ Checks: >
   google-*,
   clang-analyzer-*
 
-  -portability-avoid-pragma-once
+  -portability-avoid-pragma-once,
+  -readability-identifier-length
+
+CheckOptions:
+  - key: readability-identifier-length.MinimumParameterNameLength
+    value: '1'
 
 WarningsAsErrors: '*'
 

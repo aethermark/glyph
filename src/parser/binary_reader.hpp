@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <parser/tables.hpp>
 #include <string>
 #include <vector>
 
@@ -20,10 +21,12 @@ public:
   auto ReadUFWord() -> uint16_t;
   auto ReadOffset16() -> uint16_t;
   auto ReadOffset32() -> uint32_t;
-  auto ReadF2Dot14() -> int16_t;
-  auto ReadFixed() -> int32_t;
-  auto ReadString() -> std::string;
+  auto ReadF2Dot14() -> float;
+  auto ReadFixed() -> float;
+  auto ReadTag() -> std::string;
   // TODO(MukulWaval): implement ReadDate()
+  auto ReadTableDirectory() -> TableDirectory;
+  auto ReadTableRecord() -> TableRecord;
   auto GetPosition() -> int;
   auto SetPosition() -> void;
   [[nodiscard]]
