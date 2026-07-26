@@ -1,5 +1,9 @@
 @PACKAGE_INIT@
 
+include(CMakeFindDependencyMacro)
+
+find_dependency(Printer)
+
 include("${CMAKE_CURRENT_LIST_DIR}/GlyphTargets.cmake")
 
 check_required_components(Glyph)

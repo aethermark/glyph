@@ -7,7 +7,18 @@ project(
     LANGUAGES CXX
 )
 
-include(CTest)
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+  set(GLYPH_IS_TOP_LEVEL ON)
+else()
+  set(GLYPH_IS_TOP_LEVEL OFF)
+endif()
+
+if(GLYPH_IS_TOP_LEVEL)
+    include(CTest)
+else()
+    set(BUILD_TESTING OFF)
+endif()
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
@@ -17,20 +28,20 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Options
 # ============================================================================
 
-option(GLYPH_BUILD_PLAYGROUND "Build playground" ON)
-option(GLYPH_BUILD_BENCHMARKS "Build benchmarks" OFF)
-option(GLYPH_ENABLE_COVERAGE "Enable coverage instrumentation" OFF)
+option(GLYPH_BUILD_PLAYGROUND "Build playground" ${GLYPH_IS_TOP_LEVEL})
+option(GLYPH_BUILD_BENCHMARKS "Build benchmarks" ${GLYPH_IS_TOP_LEVEL})
+option(GLYPH_ENABLE_COVERAGE "Enable coverage instrumentation" ${GLYPH_IS_TOP_LEVEL})
 
 # ============================================================================
 # Library
 # ============================================================================
 
-add_library(glyph)
+add_library(glyph STATIC)
 
 add_library(glyph::glyph ALIAS glyph)
 
 file(GLOB_RECURSE GLYPH_SOURCES CONFIGURE_DEPENDS
-    "${PROJECT_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
 
 target_sources(glyph
@@ -40,10 +51,10 @@ target_sources(glyph
 
 target_include_directories(glyph
     PUBLIC
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     PRIVATE
-        ${PROJECT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 target_compile_features(glyph
@@ -57,13 +68,31 @@ set_target_properties(glyph PROPERTIES
 )
 
 # ============================================================================
+# Dependencies
+# ============================================================================
+
+set(PRINTER_BUILD_PLAYGROUND OFF CACHE BOOL "" FORCE)
+set(PRINTER_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+set(PRINTER_ENABLE_COVERAGE OFF CACHE BOOL "" FORCE)
+
+if (NOT TARGET printer::printer)
+  add_subdirectory(third_party/printer)
+endif()
+
+target_link_libraries(glyph
+  PUBLIC
+      printer::printer
+)
+
+# ============================================================================
 # Coverage
 # ============================================================================
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
-include(EnableCoverage)
-
-enable_coverage(glyph)
+if(GLYPH_IS_TOP_LEVEL AND GLYPH_ENABLE_COVERAGE)
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+  include(EnableCoverage)
+  enable_coverage(glyph)
+endif()
 
 # ============================================================================
 # Subdirectories
