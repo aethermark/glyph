@@ -1,7 +1,9 @@
 #include <iostream>
+#include <printer/printer.hpp>
 #include <parser/binary_reader.hpp>
-#include <printer.hpp>
 #include <vector>
+
+using printer::operator<<;
 
 auto main() -> int {
   glyph::BinaryReader reader;
@@ -20,8 +22,8 @@ auto main() -> int {
     tables.push_back(reader.ReadTableRecord());
   }
 
-  std::cout << glyph::pretty << glyph::header_bold << glyph::header(glyph::Color::kBlue)
-            << glyph::major_bold << glyph::major(glyph::Color::kBlue);
+  std::cout << printer::pretty << printer::header_bold << printer::header(printer::Color::kBlue)
+            << printer::major_bold << printer::major(printer::Color::kBlue);
 
   std::cout << directory;
   std::cout << tables;

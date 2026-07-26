@@ -1,10 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <printer/printer.hpp>
 #include <string>
 #include <tuple>
-
-#include "printer.hpp"
 
 namespace glyph {
 
@@ -24,13 +23,14 @@ public:
     using Self = TableDirectory;
 
     return std::make_tuple(
-        MakeField(
-            "sfnt_version", [](const Self& self) -> std::string { return Hex(self.sfnt_version); },
-            Alignment::kRight),
-        MakeMemberField("num_tables", &Self::num_tables, Alignment::kRight),
-        MakeMemberField("search_range", &Self::search_range, Alignment::kRight),
-        MakeMemberField("entry_selector", &Self::entry_selector, Alignment::kRight),
-        MakeMemberField("range_shift", &Self::range_shift, Alignment::kRight));
+        printer::MakeField(
+            "sfnt_version",
+            [](const Self& self) -> std::string { return printer::Hex(self.sfnt_version); },
+            printer::Alignment::kRight),
+        printer::MakeMemberField("num_tables", &Self::num_tables, printer::Alignment::kRight),
+        printer::MakeMemberField("search_range", &Self::search_range, printer::Alignment::kRight),
+        printer::MakeMemberField("entry_selector", &Self::entry_selector, printer::Alignment::kRight),
+        printer::MakeMemberField("range_shift", &Self::range_shift, printer::Alignment::kRight));
   }
 };
 
@@ -49,12 +49,12 @@ public:
     using Self = TableRecord;
 
     return std::make_tuple(
-        MakeMemberField("tag", &Self::tag, Alignment::kLeft),
-        MakeField(
-            "checksum", [](const Self& self) -> std::string { return Hex(self.checksum); },
-            Alignment::kRight),
-        MakeMemberField("offset", &Self::offset, Alignment::kRight),
-        MakeMemberField("length", &Self::length, Alignment::kRight));
+        printer::MakeMemberField("tag", &Self::tag, printer::Alignment::kLeft),
+        printer::MakeField(
+            "checksum", [](const Self& self) -> std::string { return printer::Hex(self.checksum); },
+            printer::Alignment::kRight),
+        printer::MakeMemberField("offset", &Self::offset, printer::Alignment::kRight),
+        printer::MakeMemberField("length", &Self::length, printer::Alignment::kRight));
   }
 };
 

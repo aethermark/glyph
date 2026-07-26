@@ -40,3 +40,4 @@ private:
 };
 
 }  // namespace glyph
+   // namespace glyph
