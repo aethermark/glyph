@@ -31,6 +31,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(GLYPH_BUILD_PLAYGROUND "Build playground" ${GLYPH_IS_TOP_LEVEL})
 option(GLYPH_BUILD_BENCHMARKS "Build benchmarks" ${GLYPH_IS_TOP_LEVEL})
 option(GLYPH_ENABLE_COVERAGE "Enable coverage instrumentation" ${GLYPH_IS_TOP_LEVEL})
+option(GLYPH_BUILD_STATIC_ANALYSIS "Build the static analysis translation unit" ${GLYPH_IS_TOP_LEVEL})
 
 # ============================================================================
 # Library
@@ -66,6 +67,51 @@ set_target_properties(glyph PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
 )
+
+# ============================================================================
+# Static analysis translation unit
+# ============================================================================
+
+if(GLYPH_BUILD_STATIC_ANALYSIS)
+
+    file(
+      GLOB_RECURSE GLYPH_PUBLIC_HEADERS
+        CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
+    )
+
+    set(HEADER_INCLUDES "")
+
+    foreach(header ${GLYPH_PUBLIC_HEADERS})
+        file(
+            RELATIVE_PATH rel
+            "${CMAKE_CURRENT_SOURCE_DIR}/include"
+            "${header}"
+        )
+
+        string(APPEND HEADER_INCLUDES "#include <${rel}>\n")
+    endforeach()
+
+    configure_file(
+        cmake/static_analysis.cpp.in
+        "${CMAKE_CURRENT_BINARY_DIR}/static_analysis.cpp"
+        @ONLY
+    )
+
+    add_library(glyph-static-analysis OBJECT
+        "${CMAKE_CURRENT_BINARY_DIR}/static_analysis.cpp"
+    )
+
+    target_include_directories(glyph-static-analysis
+          PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+
+    target_link_libraries(glyph-static-analysis
+        PRIVATE glyph
+    )
+
+endif()
 
 # ============================================================================
 # Dependencies
