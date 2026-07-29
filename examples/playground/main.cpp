@@ -24,15 +24,11 @@ auto main() -> int {
 
   printer::Formatter formatter;
 
-  formatter.Pretty()
-      .HeaderBold()
-      .HeaderAlignment(printer::Alignment::kCenter)
-      .HeaderColor(printer::Color::kMagenta)
-      .MajorBold()
-      .MajorColor(printer::Color::kBlue);
-
+  formatter.ThemeDark();
   formatter.Print(std::cout, directory);
+
   std::cout << '\n';
+  formatter.ThemeGruvbox();
   formatter.Print(std::cout, tables);
 
   return 0;
