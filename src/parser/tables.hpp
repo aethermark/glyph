@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <printer/printer.hpp>
+#include <printer/table.hpp>
 #include <string>
 #include <tuple>
 
@@ -29,7 +29,8 @@ public:
             printer::Alignment::kRight),
         printer::MakeMemberField("num_tables", &Self::num_tables, printer::Alignment::kRight),
         printer::MakeMemberField("search_range", &Self::search_range, printer::Alignment::kRight),
-        printer::MakeMemberField("entry_selector", &Self::entry_selector, printer::Alignment::kRight),
+        printer::MakeMemberField("entry_selector", &Self::entry_selector,
+                                 printer::Alignment::kRight),
         printer::MakeMemberField("range_shift", &Self::range_shift, printer::Alignment::kRight));
   }
 };

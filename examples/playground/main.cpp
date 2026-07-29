@@ -1,9 +1,9 @@
 #include <iostream>
-#include <printer/printer.hpp>
 #include <parser/binary_reader.hpp>
+#include <printer/formatter.hpp>
 #include <vector>
 
-using printer::operator<<;
+#include "printer/style.hpp"
 
 auto main() -> int {
   glyph::BinaryReader reader;
@@ -22,11 +22,18 @@ auto main() -> int {
     tables.push_back(reader.ReadTableRecord());
   }
 
-  std::cout << printer::pretty << printer::header_bold << printer::header(printer::Color::kBlue)
-            << printer::major_bold << printer::major(printer::Color::kBlue);
+  printer::Formatter formatter;
 
-  std::cout << directory;
-  std::cout << tables;
+  formatter.Pretty()
+      .HeaderBold()
+      .HeaderAlignment(printer::Alignment::kCenter)
+      .HeaderColor(printer::Color::kMagenta)
+      .MajorBold()
+      .MajorColor(printer::Color::kBlue);
+
+  formatter.Print(std::cout, directory);
+  std::cout << '\n';
+  formatter.Print(std::cout, tables);
 
   return 0;
 }
