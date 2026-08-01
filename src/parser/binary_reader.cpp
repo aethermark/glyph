@@ -3,7 +3,10 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
+#include <utility>
 
+#include "parser/constants.hpp"
 #include "parser/tables.hpp"
 
 auto glyph::BinaryReader::LoadData(const std::filesystem::path& path) -> bool {
@@ -33,29 +36,29 @@ auto glyph::BinaryReader::ReadUInt8() -> uint8_t {
 }
 
 auto glyph::BinaryReader::ReadUInt16() -> uint16_t {
-  uint16_t data = static_cast<uint16_t>(data_.at(position_++)) << kSHIFT_BYTE;
+  uint16_t data = static_cast<uint16_t>(data_.at(position_++)) << kBYTE;
   data |= static_cast<uint16_t>(data_.at(position_++));
   return data;
 }
 
 auto glyph::BinaryReader::ReadUInt32() -> uint32_t {
-  uint32_t data = static_cast<uint32_t>(data_.at(position_++)) << 3 * kSHIFT_BYTE;
-  data |= static_cast<uint32_t>(data_.at(position_++)) << 2 * kSHIFT_BYTE;
-  data |= static_cast<uint32_t>(data_.at(position_++)) << kSHIFT_BYTE;
+  uint32_t data = static_cast<uint32_t>(data_.at(position_++)) << 3 * kBYTE;
+  data |= static_cast<uint32_t>(data_.at(position_++)) << 2 * kBYTE;
+  data |= static_cast<uint32_t>(data_.at(position_++)) << kBYTE;
   data |= static_cast<uint32_t>(data_.at(position_++));
   return data;
 }
 
 auto glyph::BinaryReader::ReadInt16() -> int16_t {
-  uint16_t data = static_cast<uint16_t>(data_.at(position_++)) << kSHIFT_BYTE;
+  uint16_t data = static_cast<uint16_t>(data_.at(position_++)) << kBYTE;
   data |= static_cast<uint16_t>(data_.at(position_++));
   return static_cast<int16_t>(data);
 }
 
 auto glyph::BinaryReader::ReadInt32() -> int32_t {
-  uint32_t data = static_cast<uint32_t>(data_.at(position_++)) << 3 * kSHIFT_BYTE;
-  data |= static_cast<uint32_t>(data_.at(position_++)) << 2 * kSHIFT_BYTE;
-  data |= static_cast<uint32_t>(data_.at(position_++)) << kSHIFT_BYTE;
+  uint32_t data = static_cast<uint32_t>(data_.at(position_++)) << 3 * kBYTE;
+  data |= static_cast<uint32_t>(data_.at(position_++)) << 2 * kBYTE;
+  data |= static_cast<uint32_t>(data_.at(position_++)) << kBYTE;
   data |= static_cast<uint32_t>(data_.at(position_++));
   return static_cast<int32_t>(data);
 }
@@ -117,6 +120,44 @@ auto glyph::BinaryReader::ReadTableRecord() -> TableRecord {
   };
 }
 
+auto glyph::BinaryReader::ReadFont(const std::filesystem::path& path) -> Font {
+  Font font;
+
+  if (!LoadData(path)) {
+    return font;
+  }
+
+  const TableDirectory directory = ReadTableDirectory();
+
+  std::vector<TableRecord> tables;
+  tables.reserve(directory.num_tables);
+
+  for (uint16_t i = 0; i < directory.num_tables; ++i) {
+    tables.push_back(ReadTableRecord());
+  }
+
+  font.SetDirectory(directory);
+  font.SetTables(std::move(tables));
+
+  return font;
+}
+
+auto glyph::BinaryReader::GetPosition() const -> size_t {
+  return position_;
+}
+
 auto glyph::BinaryReader::GetData() const -> const std::vector<uint8_t>& {
   return data_;
+}
+
+auto glyph::BinaryReader::Seek(std::size_t position) -> void {
+  if (position > data_.size()) {
+    throw std::out_of_range("BinaryReader::Seek");
+  }
+
+  position_ = position;
+}
+
+auto glyph::BinaryReader::Skip(std::size_t bytes) -> void {
+  Seek(position_ + bytes);
 }

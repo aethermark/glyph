@@ -1,35 +1,21 @@
 #include <iostream>
 #include <parser/binary_reader.hpp>
 #include <printer/formatter.hpp>
-#include <vector>
 
-#include "printer/style.hpp"
+#include "parser/ttf_parser.hpp"
 
 auto main() -> int {
-  glyph::BinaryReader reader;
+  glyph::TtfParser parser;
 
-  if (!reader.LoadData("tests/assets/JetBrainsMono-Regular.ttf")) {
-    std::cerr << "Failed to load font.\n";
-    return 1;
-  }
-
-  const auto directory = reader.ReadTableDirectory();
-
-  std::vector<glyph::TableRecord> tables;
-  tables.reserve(directory.num_tables);
-
-  for (uint16_t i = 0; i < directory.num_tables; ++i) {
-    tables.push_back(reader.ReadTableRecord());
-  }
+  auto head = parser.ReadHeadTable();
+  auto maxp = parser.ReadMaxpTable();
+  auto loca = parser.ReadLocaTable();
 
   printer::Formatter formatter;
-
-  formatter.ThemeDark();
-  formatter.Print(std::cout, directory);
-
-  std::cout << '\n';
   formatter.ThemeGruvbox();
-  formatter.Print(std::cout, tables);
+  formatter.Print(std::cout, head);
+  formatter.Print(std::cout, maxp);
+  formatter.Print(std::cout, loca);
 
   return 0;
 }

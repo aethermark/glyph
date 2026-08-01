@@ -1,10 +1,13 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <parser/tables.hpp>
 #include <string>
 #include <vector>
+
+#include "parser/font.hpp"
 
 namespace glyph {
 
@@ -27,17 +30,17 @@ public:
   // TODO(MukulWaval): implement ReadDate()
   auto ReadTableDirectory() -> TableDirectory;
   auto ReadTableRecord() -> TableRecord;
-  auto GetPosition() -> int;
-  auto SetPosition() -> void;
-  [[nodiscard]]
-  auto GetData() const -> const std::vector<uint8_t>&;
+  auto ReadFont(const std::filesystem::path& path) -> Font;
+  [[nodiscard]] auto GetPosition() const -> size_t;
+  [[nodiscard]] auto GetData() const -> const std::vector<uint8_t>&;
+
+  auto Seek(std::size_t position) -> void;
+  auto Skip(std::size_t bytes) -> void;
 
 private:
-  int position_;
-  uintmax_t size_;
+  size_t position_{};
+  uintmax_t size_{};
   std::vector<uint8_t> data_;
-  static constexpr uint8_t kSHIFT_BYTE = 8;
 };
 
 }  // namespace glyph
-   // namespace glyph
