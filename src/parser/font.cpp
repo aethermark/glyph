@@ -1,5 +1,6 @@
 #include "parser/font.hpp"
 
+#include <string>
 #include <utility>
 
 #include "parser/tables.hpp"
@@ -26,6 +27,10 @@ auto glyph::Font::GetMaxp() const -> const TableRecord* {
 
 auto glyph::Font::GetLoca() const -> const TableRecord* {
   return FindTable("loca");
+}
+
+auto glyph::Font::GetCmap() const -> const TableRecord* {
+  return FindTable("cmap");
 }
 
 auto glyph::Font::GetGlyf() const -> const TableRecord* {

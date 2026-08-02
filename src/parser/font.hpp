@@ -16,6 +16,7 @@ public:
   [[nodiscard]] auto GetHead() const -> const TableRecord*;
   [[nodiscard]] auto GetMaxp() const -> const TableRecord*;
   [[nodiscard]] auto GetLoca() const -> const TableRecord*;
+  [[nodiscard]] auto GetCmap() const -> const TableRecord*;
   [[nodiscard]] auto GetGlyf() const -> const TableRecord*;
 
   auto SetDirectory(const TableDirectory& directory) -> void;

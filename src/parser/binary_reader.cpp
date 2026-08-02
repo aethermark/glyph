@@ -10,6 +10,7 @@
 #include "parser/tables.hpp"
 
 auto glyph::BinaryReader::LoadData(const std::filesystem::path& path) -> bool {
+  position_ = 0;
   std::ifstream file(path, std::ios::binary);
 
   if (!file) {

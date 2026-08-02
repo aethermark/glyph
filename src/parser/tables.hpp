@@ -4,6 +4,7 @@
 #include <printer/table.hpp>
 #include <string>
 #include <tuple>
+#include <variant>
 
 namespace glyph {
 
@@ -246,6 +247,162 @@ public:
                              return std::to_string(self.offsets.size());
                            }));
   }
+};
+
+struct CmapEncodingRecord {
+public:
+  uint16_t platform_id;
+  uint16_t encoding_id;
+  uint32_t offset;
+};
+
+struct CmapFormat4 {
+  uint16_t language{};
+
+  std::vector<uint16_t> end_codes;
+  std::vector<uint16_t> start_codes;
+
+  std::vector<int16_t> id_delta;
+
+  std::vector<uint16_t> id_range_offset;
+
+  std::vector<uint16_t> glyph_id_array;
+
+  [[nodiscard]] auto Lookup(uint16_t codepoint) const -> uint16_t {
+    for (std::size_t i = 0; i < start_codes.size(); ++i) {
+      if (codepoint < start_codes.at(i) || codepoint > end_codes.at(i)) {
+        continue;
+      }
+
+      if (id_range_offset.at(i) == 0) {
+        return static_cast<uint16_t>(codepoint + id_delta.at(i));
+      }
+
+      // Index into glyphIdArray.
+      //
+      // idRangeOffset is measured in bytes from the location of the
+      // current idRangeOffset entry.
+      std::size_t offset_words = id_range_offset.at(i) / 2;
+
+      std::size_t glyph_index =
+          offset_words + (codepoint - start_codes.at(i)) - (id_range_offset.size() - i);
+
+      if (glyph_index >= glyph_id_array.size()) {
+        return 0;
+      }
+
+      uint16_t glyph = glyph_id_array.at(glyph_index);
+
+      if (glyph == 0) {
+        return 0;
+      }
+
+      const auto mask = 0xFFFF;
+      return static_cast<uint16_t>((glyph + id_delta.at(i)) & mask);
+    }
+
+    return 0;
+  };
+};
+
+struct CmapTable {
+public:
+  uint16_t version{};
+  uint16_t num_tables{};
+  std::vector<CmapEncodingRecord> encodings;
+
+  CmapFormat4 format4;
+
+  [[nodiscard]]
+  auto Lookup(uint32_t codepoint) const -> uint16_t {
+    return format4.Lookup(static_cast<uint16_t>(codepoint));
+  }
+};
+
+struct GlyphHeader {
+public:
+  int16_t number_of_contours;
+
+  int16_t x_min;
+  int16_t y_min;
+  int16_t x_max;
+  int16_t y_max;
+
+  static constexpr auto Name() -> std::string_view {
+    return "GlyphHeader";
+  }
+
+  static constexpr auto Fields() {
+    using Self = GlyphHeader;
+
+    return std::make_tuple(
+        printer::MakeMemberField("number_of_contours", &Self::number_of_contours),
+        printer::MakeMemberField("x_min", &Self::x_min),
+        printer::MakeMemberField("y_min", &Self::y_min),
+        printer::MakeMemberField("x_max", &Self::x_max),
+        printer::MakeMemberField("y_max", &Self::y_max));
+  }
+};
+
+struct SimpleGlyph {
+public:
+  GlyphHeader header{};
+
+  std::vector<uint16_t> end_pts_of_contours;
+
+  std::vector<uint8_t> instructions;
+
+  std::vector<uint8_t> flags;
+
+  std::vector<int16_t> x_coordinates;
+  std::vector<int16_t> y_coordinates;
+};
+
+struct GlyphComponent {
+public:
+  uint16_t flags{};
+
+  uint16_t glyph_index{};
+
+  int16_t argument1{};
+  int16_t argument2{};
+
+  float scale_x = 1.0F;
+  float scale_y = 1.0F;
+
+  float scale01 = 0.0F;
+  float scale10 = 0.0F;
+
+  static constexpr auto Name() -> std::string_view {
+    return "GlyphComponent";
+  }
+
+  static constexpr auto Fields() {
+    using Self = GlyphComponent;
+
+    return std::make_tuple(printer::MakeMemberField("flags", &Self::flags),
+                           printer::MakeMemberField("glyph_index", &Self::glyph_index),
+                           printer::MakeMemberField("argument1", &Self::argument1),
+                           printer::MakeMemberField("argument2", &Self::argument2),
+                           printer::MakeMemberField("scale_x", &Self::scale_x),
+                           printer::MakeMemberField("scale_y", &Self::scale_y),
+                           printer::MakeMemberField("scale01", &Self::scale01),
+                           printer::MakeMemberField("scale10", &Self::scale10));
+  }
+};
+
+struct CompoundGlyph {
+public:
+  GlyphHeader header{};
+
+  std::vector<GlyphComponent> components;
+
+  std::vector<uint8_t> instructions;
+};
+
+struct Glyph {
+public:
+  std::variant<std::monostate, SimpleGlyph, CompoundGlyph> data;
 };
 
 }  // namespace glyph
